@@ -2,11 +2,71 @@
 
 <html lang="zxx">
 
+    <script>
+        var clickCount = 0;
+        var time = 0;
+        async function convert() {
+            clickCount +=1;
+            var buttonText = document.getElementById("convertbutton").innerHTML;
+            document.getElementById("convertbutton").innerHTML = "converting...";
+            var a = document.getElementById("xmlinput").value;
+            var date1 = new Date();
+            var b = await xmlToJson(parseXml(a));
+            var date2 = new Date();
+            time += date2 - date1;
+            console.log('converting time is', date2 - date1, '\naverage time: ', time/clickCount);
+
+            document.getElementById("jsoninput").innerHTML = JSON.stringify(b);
+            document.getElementById("convertbutton").innerHTML = buttonText;
+
+        }
+        function parseXml(xmlStr) {
+            return new window.DOMParser().parseFromString(xmlStr, "text/xml");
+        }
+        function xmlToJson(xml) {
+
+            var obj = {};
+            if (xml.nodeType === 1) {
+                if (xml.attributes.length > 0) {
+                    for (var j = 0; j < xml.attributes.length; j++) {
+                        var attribute = xml.attributes.item(j);
+                        obj[attribute.nodeName] = attribute.nodeValue;
+                    }
+                }
+            } else if (xml.nodeType === 3) {
+                obj = xml.nodeValue.trim();
+            }
+            if (xml.hasChildNodes()) {
+                for(var i = 0; i < xml.childNodes.length; i++) {
+                    var item = xml.childNodes.item(i);
+                    var nodeName = item.nodeName;
+                    if (typeof(obj[nodeName]) == "undefined") {
+                        var tmpJson = xmlToJson(item);
+                        if(tmpJson !== "")
+                            obj[nodeName] = tmpJson;
+                    } else {
+                        if (typeof(obj[nodeName].push) == "undefined") {
+                            var old = obj[nodeName];
+                            obj[nodeName] = [];
+                            obj[nodeName].push(old);
+                        }
+                        var tmp = xmlToJson(item);
+                        if(tmp !== "") {
+                            obj[nodeName].push(tmp);
+                        }
+                    }
+                }
+            }
+            return obj;
+        }
+    </script>
+
     <head>
         <meta charset="UTF-8">
         <title>XML to JSON</title>
-        <link rel="stylesheet/less" type="text/css" href="styles.less">
-        <script src="https://cdn.jsdelivr.net/npm/less" ></script>
+        <link rel="stylesheet" href="style.css">
+<!--        <link rel="stylesheet/less" type="text/css" href="styles.less">-->
+<!--        <script src="https://cdn.jsdelivr.net/npm/less" ></script>-->
     </head>
 
     <body>
@@ -15,9 +75,9 @@
         </header>
         <main>
             <div class="inputs">
-                <textarea class="inputs__input" placeholder="your XML"></textarea>
-                <button>Convert</button>
-                <textarea class="inputs__input" placeholder="your JSON" disabled></textarea>
+                <textarea id="xmlinput" class="inputs__input" placeholder="your XML"></textarea>
+                <button id="convertbutton" onclick='convert()'>Convert</button>
+                <textarea id="jsoninput" class="inputs__input" placeholder="your JSON" disabled></textarea>
             </div>
         </main>
         <footer>
